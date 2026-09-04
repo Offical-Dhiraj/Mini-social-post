@@ -2,7 +2,22 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-const uploadDirectory = path.join(process.cwd(), "uploads");
+/*
+|--------------------------------------------------------------------------
+| Upload directory
+|--------------------------------------------------------------------------
+*/
+
+const uploadDirectory = path.join(
+  __dirname,
+  "../../uploads"
+);
+
+/*
+|--------------------------------------------------------------------------
+| Create uploads folder if it does not exist
+|--------------------------------------------------------------------------
+*/
 
 if (!fs.existsSync(uploadDirectory)) {
   fs.mkdirSync(uploadDirectory, {
@@ -10,40 +25,58 @@ if (!fs.existsSync(uploadDirectory)) {
   });
 }
 
+/*
+|--------------------------------------------------------------------------
+| Storage configuration
+|--------------------------------------------------------------------------
+*/
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDirectory);
   },
 
   filename: (req, file, cb) => {
-    const extension = path.extname(file.originalname);
+    const extension = path.extname(
+      file.originalname
+    );
 
-    const uniqueName = `${Date.now()}-${Math.round(
-      Math.random() * 1e9
-    )}${extension}`;
+    const filename =
+      `${Date.now()}-${Math.round(
+        Math.random() * 1e9
+      )}${extension}`;
 
-    cb(null, uniqueName);
+    cb(null, filename);
   },
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-  ];
+/*
+|--------------------------------------------------------------------------
+| File validation
+|--------------------------------------------------------------------------
+*/
 
-  if (!allowedTypes.includes(file.mimetype)) {
-    return cb(new Error("Only image files are allowed"));
+const fileFilter = (req, file, cb) => {
+  if (!file.mimetype.startsWith("image/")) {
+    return cb(
+      new Error("Only image files are allowed")
+    );
   }
 
   cb(null, true);
 };
 
+/*
+|--------------------------------------------------------------------------
+| Multer
+|--------------------------------------------------------------------------
+*/
+
 const upload = multer({
   storage,
+
   fileFilter,
+
   limits: {
     fileSize: 5 * 1024 * 1024,
   },
