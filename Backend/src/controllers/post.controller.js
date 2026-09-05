@@ -1,4 +1,5 @@
 const postService = require("../services/post.service");
+const uploadToCloudinary = require("../utils/cloudinaryUpload");
 
 const createPost = async (req, res, next) => {
   try {
@@ -7,9 +8,11 @@ const createPost = async (req, res, next) => {
     let image = null;
 
     if (req.file) {
+      const uploadedImage = await uploadToCloudinary(req.file.buffer);
+
       image = {
-        url: `/uploads/${req.file.filename}`,
-        publicId: req.file.filename,
+        url: uploadedImage.secure_url,
+        publicId: uploadedImage.public_id,
       };
     }
 
