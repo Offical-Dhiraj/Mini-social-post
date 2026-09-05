@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import AuthLayout from "./AuthLayout";
 import Input from "../common/Input";
 import Button from "../common/Button";
 
@@ -12,18 +11,15 @@ const SignupForm = () => {
 
   const { signup } = useAuth();
 
-  const [formData, setFormData] =
-    useState({
-      username: "",
-      email: "",
-      password: "",
-    });
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (event) => {
     const {
@@ -37,9 +33,7 @@ const SignupForm = () => {
     }));
   };
 
-  const handleSubmit = async (
-    event
-  ) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     setError("");
@@ -49,10 +43,7 @@ const SignupForm = () => {
       !formData.email.trim() ||
       !formData.password
     ) {
-      setError(
-        "Please fill in all fields."
-      );
-
+      setError("Please fill in all fields.");
       return;
     }
 
@@ -73,79 +64,55 @@ const SignupForm = () => {
   };
 
   return (
-    <AuthLayout
-      title="Create your account"
-      subtitle="Join the community and start sharing posts."
-      footerText="Already have an account?"
-      footerLinkText="Login"
-      footerLinkTo="/login"
+    <form
+      className="auth-form"
+      onSubmit={handleSubmit}
     >
+      {error && (
+        <div className="form-alert">
+          {error}
+        </div>
+      )}
 
-      <form
-        className="auth-form"
-        onSubmit={handleSubmit}
+      <Input
+        label="Username"
+        name="username"
+        type="text"
+        placeholder="Enter your username"
+        value={formData.username}
+        onChange={handleChange}
+        required
+      />
+
+      <Input
+        label="Email"
+        name="email"
+        type="email"
+        placeholder="Enter your email"
+        value={formData.email}
+        onChange={handleChange}
+        required
+      />
+
+      <Input
+        label="Password"
+        name="password"
+        type="password"
+        placeholder="Create a password"
+        value={formData.password}
+        onChange={handleChange}
+        required
+      />
+
+      <Button
+        type="submit"
+        disabled={loading}
       >
-
-        {error && (
-          <div className="form-alert">
-            {error}
-          </div>
-        )}
-
-        <Input
-          label="Username"
-          name="username"
-          type="text"
-          placeholder="Enter your username"
-          value={
-            formData.username
-          }
-          onChange={
-            handleChange
-        }
-          required
-        />
-
-        <Input
-          label="Email"
-          name="email"
-          type="email"
-          placeholder="Enter your email"
-          value={
-            formData.email
-          }
-          onChange={
-            handleChange
-          }
-          required
-        />
-
-        <Input
-          label="Password"
-          name="password"
-          type="password"
-          placeholder="Create a password"
-          value={
-            formData.password
-          }
-          onChange={
-            handleChange
-          }
-          required
-        />
-
-        <Button
-          type="submit"
-          disabled={loading}
-        >
-          {loading
-            ? "Creating account..."
-            : "Create account"}
-        </Button>
-
-      </form>
-
-    </AuthLayout>
+        {loading
+          ? "Creating account..."
+          : "Create account"}
+      </Button>
+    </form>
   );
 };
 

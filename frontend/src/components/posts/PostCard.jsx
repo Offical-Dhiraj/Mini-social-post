@@ -526,14 +526,7 @@ const PostCard = ({
 
         </div>
 
-        <button
-          type="button"
-          className="post-more-button"
-          aria-label="Post options"
-          title="Post options"
-        >
-          <MoreIcon />
-        </button>
+ 
 
       </div>
 
@@ -647,8 +640,8 @@ const PostCard = ({
         <button
           type="button"
           className={`post-action ${liked
-              ? "post-action-liked"
-              : ""
+            ? "post-action-liked"
+            : ""
             }`}
           onClick={
             handleLike

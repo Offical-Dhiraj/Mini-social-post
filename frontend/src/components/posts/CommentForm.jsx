@@ -43,7 +43,7 @@ const CommentForm = ({
       <div className="comment-input-wrapper">
 
         <span className="comment-input-avatar">
-          U
+          
         </span>
 
         <input

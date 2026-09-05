@@ -4,7 +4,10 @@ import {
   useState,
 } from "react";
 
-import { Link } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
 import {
   getPosts,
@@ -21,65 +24,45 @@ const Feed = () => {
   const {
     user,
     isAuthenticated,
+    logout,
   } = useAuth();
 
-  const [posts, setPosts] =
-    useState([]);
+  const navigate = useNavigate();
 
-  const [loading, setLoading] =
-    useState(true);
+  const [posts, setPosts] = useState([]);
+
+  const [loading, setLoading] = useState(true);
 
   const [loadingMore, setLoadingMore] =
     useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [page, setPage] =
-    useState(1);
+  const [page, setPage] = useState(1);
 
-  const [hasMore, setHasMore] =
-    useState(false);
+  const [hasMore, setHasMore] = useState(false);
 
-  const extractPosts = (
-    response
-  ) => {
-    if (
-      Array.isArray(response)
-    ) {
+  const extractPosts = (response) => {
+    if (Array.isArray(response)) {
       return response;
     }
 
-    if (
-      Array.isArray(
-        response.posts
-      )
-    ) {
+    if (Array.isArray(response.posts)) {
       return response.posts;
     }
 
-    if (
-      Array.isArray(
-        response.data?.posts
-      )
-    ) {
+    if (Array.isArray(response.data?.posts)) {
       return response.data.posts;
     }
 
-    if (
-      Array.isArray(
-        response.data
-      )
-    ) {
+    if (Array.isArray(response.data)) {
       return response.data;
     }
 
     return [];
   };
 
-  const getPagination = (
-    response
-  ) => {
+  const getPagination = (response) => {
     return (
       response.pagination ||
       response.data?.pagination ||
@@ -87,68 +70,51 @@ const Feed = () => {
     );
   };
 
-  const fetchPosts =
-    useCallback(
-      async () => {
-        try {
-          setLoading(true);
-          setError("");
+  const fetchPosts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-          const response =
-            await getPosts(
-              1,
-              LIMIT
-            );
+      const response = await getPosts(
+        1,
+        LIMIT
+      );
 
-          console.log(
-            "Feed response:",
-            response
-          );
+      const postList =
+        extractPosts(response);
 
-          const postList =
-            extractPosts(
-              response
-            );
+      const pagination =
+        getPagination(response);
 
-          const pagination =
-            getPagination(
-              response
-            );
+      setPosts(postList);
 
-          setPosts(postList);
+      setHasMore(
+        Boolean(
+          pagination.hasNextPage
+        )
+      );
 
-          setHasMore(
-            Boolean(
-              pagination.hasNextPage
-            )
-          );
+      setPage(1);
+    } catch (err) {
+      console.error(
+        "Feed error:",
+        err
+      );
 
-          setPage(1);
-        } catch (err) {
-          console.error(
-            "Feed error:",
-            err
-          );
-
-          setError(
-            err.response?.data
-              ?.message ||
-              "Unable to load posts."
-          );
-        } finally {
-          setLoading(false);
-        }
-      },
-      []
-    );
+      setError(
+        err.response?.data?.message ||
+          "Unable to load posts."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
-  const handlePostCreated = (
-    newPost
-  ) => {
+  const handlePostCreated = (newPost) => {
     setPosts((current) => [
       newPost,
       ...current,
@@ -164,94 +130,93 @@ const Feed = () => {
 
     setPosts((current) =>
       current.map((post) =>
-        post._id ===
-        updatedPost._id
+        post._id === updatedPost._id
           ? updatedPost
           : post
       )
     );
   };
 
-  const handleLoadMore =
-    async () => {
-      if (
-        loadingMore ||
-        !hasMore
-      ) {
-        return;
-      }
+  const handleLoadMore = async () => {
+    if (
+      loadingMore ||
+      !hasMore
+    ) {
+      return;
+    }
 
-      try {
-        setLoadingMore(true);
+    try {
+      setLoadingMore(true);
 
-        const nextPage =
-          page + 1;
+      const nextPage = page + 1;
 
-        const response =
-          await getPosts(
-            nextPage,
-            LIMIT
-          );
+      const response = await getPosts(
+        nextPage,
+        LIMIT
+      );
 
-        const newPosts =
-          extractPosts(
-            response
-          );
+      const newPosts =
+        extractPosts(response);
 
-        const pagination =
-          getPagination(
-            response
-          );
+      const pagination =
+        getPagination(response);
 
-        setPosts(
-          (current) => {
-            const ids =
-              new Set(
-                current.map(
-                  (post) =>
-                    post._id
-                )
-              );
-
-            const unique =
-              newPosts.filter(
-                (post) =>
-                  !ids.has(
-                    post._id
-                  )
-              );
-
-            return [
-              ...current,
-              ...unique,
-            ];
-          }
-        );
-
-        setPage(nextPage);
-
-        setHasMore(
-          Boolean(
-            pagination.hasNextPage
+      setPosts((current) => {
+        const ids = new Set(
+          current.map(
+            (post) => post._id
           )
         );
-      } catch (err) {
-        setError(
-          err.response?.data
-            ?.message ||
-            "Unable to load more posts."
-        );
-      } finally {
-        setLoadingMore(false);
-      }
-    };
+
+        const unique =
+          newPosts.filter(
+            (post) =>
+              !ids.has(post._id)
+          );
+
+        return [
+          ...current,
+          ...unique,
+        ];
+      });
+
+      setPage(nextPage);
+
+      setHasMore(
+        Boolean(
+          pagination.hasNextPage
+        )
+      );
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Unable to load more posts."
+      );
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+
+    navigate("/login", {
+      replace: true,
+    });
+  };
 
   return (
     <div className="feed-page">
 
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <header className="feed-header">
 
         <div className="feed-header-inner">
+
+          {/* Brand */}
 
           <Link
             to="/feed"
@@ -261,23 +226,45 @@ const Feed = () => {
               S
             </span>
 
-            <span>
+            <span className="brand-name">
               Social
             </span>
           </Link>
 
+          {/* Center title */}
+
+          <div className="feed-header-title">
+          </div>
+
+          {/* User */}
+
           {isAuthenticated ? (
-            <div className="user-chip">
+            <div className="feed-user-actions">
 
-              <span className="user-chip-avatar">
-                {user?.username
-                  ?.charAt(0)
-                  .toUpperCase()}
-              </span>
+              <div className="user-chip">
 
-              <span>
-                {user?.username}
-              </span>
+                <span className="user-chip-avatar">
+                  {user?.username
+                    ?.charAt(0)
+                    .toUpperCase()}
+                </span>
+
+                <span className="user-chip-name">
+                  {user?.username}
+                </span>
+
+              </div>
+
+              <button
+                type="button"
+                className="logout-button"
+                onClick={
+                  handleLogout
+                }
+                aria-label="Logout"
+              >
+                Logout
+              </button>
 
             </div>
           ) : (
@@ -293,24 +280,63 @@ const Feed = () => {
 
       </header>
 
+
+      {/* =================================================
+          MAIN
+      ================================================= */}
+
       <main className="feed-main">
 
-        <div className="feed-heading">
+        {/* Feed Intro */}
 
-          <p className="feed-eyebrow">
-            COMMUNITY
-          </p>
+        <section className="feed-heading">
 
-          <h1>
-            Social Feed
-          </h1>
+          <div>
+            <p className="feed-eyebrow">
+              YOUR COMMUNITY
+            </p>
 
-          <p>
-            Discover what people
-            are sharing.
-          </p>
+            <h1>
+              Social Feed
+            </h1>
 
-        </div>
+            <p className="feed-description">
+              See what people are sharing.
+            </p>
+          </div>
+
+        </section>
+
+
+        {/* Login message for guests */}
+
+        {!isAuthenticated && (
+          <div className="login-note">
+
+            <div className="login-note-icon">
+              ✦
+            </div>
+
+            <div>
+              <strong>
+                Join the conversation
+              </strong>
+
+              <p>
+                Login to create posts,
+                like posts and comment.
+                {" "}
+                <Link to="/login">
+                  Login
+                </Link>
+              </p>
+            </div>
+
+          </div>
+        )}
+
+
+        {/* Create Post */}
 
         {isAuthenticated && (
           <CreatePost
@@ -320,11 +346,19 @@ const Feed = () => {
           />
         )}
 
+
+        {/* Error */}
+
         {error && (
           <div className="feed-alert">
-            {error}
+            <span>!</span>
+
+            <p>{error}</p>
           </div>
         )}
+
+
+        {/* Loading */}
 
         {loading ? (
           <div className="feed-loading">
@@ -332,11 +366,14 @@ const Feed = () => {
             <div className="spinner" />
 
             <p>
-              Loading posts...
+              Loading your feed...
             </p>
 
           </div>
         ) : posts.length === 0 ? (
+
+          /* Empty */
+
           <div className="empty-feed">
 
             <div className="empty-icon">
@@ -348,58 +385,82 @@ const Feed = () => {
             </h2>
 
             <p>
-              Be the first to
-              share something.
+              Be the first to share
+              something with the community.
             </p>
 
+            {isAuthenticated && (
+              <span className="empty-hint">
+                Create your first post above.
+              </span>
+            )}
+
           </div>
+
         ) : (
+
+          /* Posts */
+
           <div className="posts-list">
 
-            {posts.map(
-              (post) => (
-                <PostCard
-                  key={
-                    post._id
-                  }
-                  post={post}
-                  onPostUpdated={
-                    handlePostUpdated
-                  }
-                />
-              )
-            )}
+            {posts.map((post) => (
+              <PostCard
+                key={post._id}
+                post={post}
+                onPostUpdated={
+                  handlePostUpdated
+                }
+              />
+            ))}
 
           </div>
         )}
 
-        {!loading &&
-          hasMore && (
-            <div className="load-more-wrapper">
 
-              <button
-                className="load-more-button"
-                onClick={
-                  handleLoadMore
-                }
-                disabled={
-                  loadingMore
-                }
-              >
-                {loadingMore
-                  ? "Loading..."
-                  : "Load more posts"}
-              </button>
+        {/* Load More */}
 
-            </div>
-          )}
+        {!loading && hasMore && (
+          <div className="load-more-wrapper">
+
+            <button
+              type="button"
+              className="load-more-button"
+              onClick={
+                handleLoadMore
+              }
+              disabled={
+                loadingMore
+              }
+            >
+              {loadingMore ? (
+                <>
+                  <span className="button-spinner" />
+                  Loading...
+                </>
+              ) : (
+                "Load more posts"
+              )}
+            </button>
+
+          </div>
+        )}
+
+
+        {/* Feed End */}
 
         {!loading &&
           posts.length > 0 &&
           !hasMore && (
             <div className="feed-end">
-              You've reached the
-              end of the feed.
+
+              <span className="feed-end-line" />
+
+              <span>
+                You're all caught up
+              </span>
+
+              <span className="feed-end-line" />
+
             </div>
           )}
 

@@ -30,7 +30,9 @@ const AuthLayout = ({
         <div className="auth-heading">
           <h1>{title}</h1>
 
-          <p>{subtitle}</p>
+          <p>
+            {subtitle}
+          </p>
         </div>
 
         {/* Form */}
@@ -41,17 +43,13 @@ const AuthLayout = ({
           footerLink &&
           footerLabel && (
             <div className="auth-footer">
-
               <span>
                 {footerText}
               </span>
 
-              <Link
-                to={footerLink}
-              >
+              <Link to={footerLink}>
                 {footerLabel}
               </Link>
-
             </div>
           )}
 
